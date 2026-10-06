@@ -8,7 +8,7 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 
-\title{Supporting Information: Predicting Iron--Sulfur Protein Redox Potentials Using a pH-Conditioned Relational Graph Neural Network}
+\title{Supporting Information: Predicting Iron--Sulfur Protein Reduction Potentials Using a pH-Conditioned Multi-Relational Residue Graph Neural Network}
 
 \author{Anonymous Author List}
 \affiliation{Department of Computational Chemistry and Chemical Informatics}
@@ -86,8 +86,8 @@ Model Variant & MAE (mV) & MAE SD (mV) & RMSE (mV) & $R^2$ & Pearson $r$ \\
 1. Full FiLM-RGCN (Champion Positive Control) & $\mathbf{58.45}$ & $\pm 6.66$ & $\mathbf{81.72}$ & $\mathbf{0.888}$ & $\mathbf{0.944}$ \\
 2. No pH (pH Conditioning Removed) & $75.74$ & $\pm 6.94$ & $113.80$ & $0.787$ & $0.888$ \\
 3. Shuffled pH (Negative Permutation Control) & $76.27$ & $\pm 7.87$ & $111.45$ & $0.796$ & $0.893$ \\
-4. Remove Polar H-Bond Edges (Type 2) & $62.02$ & $\pm 6.36$ & $89.70$ & $0.866$ & $0.933$ \\
-5. Remove Disulfide/Coordinate Edges (Type 3) & $63.21$ & $\pm 8.60$ & $87.35$ & $0.873$ & $0.936$ \\
+4. Remove Putative Polar Contact Edges (Type 2, $\text{N}\cdots\text{O} \le 3.5\text{ \AA}$) & $62.02$ & $\pm 6.36$ & $89.70$ & $0.866$ & $0.933$ \\
+5. Remove Cysteine Sulfur Proximity Edges (Type 3, $\text{S}_\gamma\cdots\text{S}_\gamma \le 2.5\text{ \AA}$) & $63.21$ & $\pm 8.60$ & $87.35$ & $0.873$ & $0.936$ \\
 6. Shuffled Node Features (Negative Control) & $66.24$ & $\pm 5.62$ & $93.40$ & $0.855$ & $0.925$ \\
 7. Shuffled Relation Labels (Negative Control) & $66.34$ & $\pm 7.08$ & $95.62$ & $0.848$ & $0.921$ \\
 \bottomrule
