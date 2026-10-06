@@ -1,5 +1,6 @@
 # libraries
 import os
+import shutil
 import logging
 from tqdm import tqdm
 from collections import OrderedDict
@@ -23,11 +24,11 @@ from utils import (
 
 # Parameters
 round_c=2
-all_atom_CofAtom=False                
+all_atom_CofAtom=False              
 list_Bar = list(np.arange(8, 17))  # set range for sampling r1
 list_CofAtom = list(np.arange(3, 6))  # set range for sampling r2
 path_dir = ""
-path_dataset="../Database Redox Pot Fe2S2 proteins.xlsx"  #file di partenza
+path_dataset="../Database Redox Pot Fe2S2 proteins.xlsx"  #initial file di partenza
 
 cofactors_names=["FES", "FE"]             #name of the cofactor
 cofactor_index_dict={               #index considered for the cofactor
@@ -98,7 +99,7 @@ for bar in list_Bar:
             if os.path.isfile(path_pdb+"/"+name_protein+".pdb")==False:
                 #se non c'è il file lo scarico
                 pdbl.retrieve_pdb_file(name_protein, pdir=path_pdb, file_format="pdb")
-                os.system("cp "+path_pdb+"/pdb"+name_protein+".ent "+path_pdb+"/"+name_protein+".pdb")
+                shutil.copy(path_pdb+"/pdb"+name_protein+".ent", path_pdb+"/"+name_protein+".pdb")
             parser = PDBParser(PERMISSIVE=True, QUIET=True)
             structure = parser.get_structure(
                 os.path.join(path_pdb, name_protein.lower()),

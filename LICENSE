@@ -1,0 +1,45 @@
+MIT License with Mandatory Academic Attribution & Anti-Plagiarism Clause
+
+Copyright (c) 2026 hubdk17 (https://github.com/hubdk17/Redox_Potential)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+================================================================================
+MANDATORY ACADEMIC CITATION & ETHICAL USE REQUIREMENT
+================================================================================
+1. PROPER CITATION REQUIRED: Any research papers, journal articles, preprints,
+   theses, dissertations, technical reports, presentations, web applications, or
+   derived software packages that use, adapt, reproduce, or build upon:
+   - The FiLM-RGCN graph neural network architecture,
+   - The multi-relational 3D structural graph representation and 5 edge types,
+   - The layer-wise pH Feature-wise Linear Modulation (FiLM) conditioning mechanism,
+   - The dual-scale Fe-S active center exponential radial distance readout,
+   - The curated 364-sample Fe-S redox benchmark dataset and multi-regime validation splits,
+   - Or any accompanying code, models, figures, and experimental findings in this repository,
+   MUST explicitly cite this GitHub repository (https://github.com/hubdk17/Redox_Potential)
+   and the associated research article:
+   "Predicting Iron–Sulfur Protein Redox Potentials Using a pH-Conditioned Relational Graph Neural Network"
+   (Journal of Chemical Information and Modeling / JCIM).
+
+2. STRICT PROHIBITION AGAINST UNCREDITED COPYING / PLAGIARISM:
+   Copying, mirroring, repackaging, claiming primary authorship, or distributing
+   any portion of this codebase, architecture, experimental data, or manuscript
+   WITHOUT prominent citation and attribution to this repository is strictly
+   prohibited and constitutes an unethical violation of scientific integrity.
+================================================================================
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

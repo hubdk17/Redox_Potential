@@ -1,5 +1,6 @@
 # libraries
 import os
+import shutil
 import logging
 from tqdm import tqdm
 from collections import OrderedDict
@@ -98,7 +99,7 @@ for bar in list_Bar:
             if os.path.isfile(path_pdb+"/"+name_protein+".pdb")==False:
                 #se non c'è il file lo scarico
                 pdbl.retrieve_pdb_file(name_protein, pdir=path_pdb, file_format="pdb")
-                os.system("cp "+path_pdb+"/pdb"+name_protein+".ent "+path_pdb+"/"+name_protein+".pdb")
+                shutil.copy(path_pdb+"/pdb"+name_protein+".ent", path_pdb+"/"+name_protein+".pdb")
             parser = PDBParser(PERMISSIVE=True, QUIET=True)
             structure = parser.get_structure(
                 os.path.join(path_pdb, name_protein.lower()),

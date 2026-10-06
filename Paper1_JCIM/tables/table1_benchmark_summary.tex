@@ -1,0 +1,27 @@
+\begin{table}[htbp]
+\centering
+\caption{Cross-Validation Performance on the Unified Fe--S Redox Potential Benchmark ($N=364$)}
+\label{tab:benchmark_summary}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Model & Representation & Folds & MAE (mV) & RMSE (mV) & $R^2$ & Pearson $r$ \\
+\midrule
+XGBoost (Literature Tuned)\textsuperscript{\emph{a}} & 96 Descriptors (Repo) & 5 & $143.50$ & $194.10$ & $0.310$ & $0.556$ \\
+XGBoost (Curated Baseline)\textsuperscript{\emph{b}} & 96 Clean Descriptors & 5 & $48.39 \pm 3.98$ & $70.84$ & $0.917$ & $0.958$ \\
+\midrule
+FiLM-RGCN (Standardized Protocol)\textsuperscript{\emph{c}} & 3D Relational Graph + pH & 5 & $57.83 \pm 6.46$ & $82.75$ & $0.886$ & $0.944$ \\
+FiLM-RGCN (Ablation Positive Control)\textsuperscript{\emph{d}} & 3D Relational Graph + pH & 5 & $58.45 \pm 6.66$ & $81.72$ & $0.888$ & $0.944$ \\
+FiLM-RGCN (Optimized Grid Search)\textsuperscript{\emph{e}} & 3D Relational Graph + pH & 5 & $\mathbf{46.35 \pm 6.31}$ & $\mathbf{64.44}$ & $\mathbf{0.929}$ & $\mathbf{0.965}$ \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{1ex}
+\raggedright
+\footnotesize
+\textsuperscript{\emph{a}} Published code pipeline of Persico et al.\cite{persico2025predicting} evaluated on raw extracted descriptors exhibiting dictionary key collisions.\\
+\textsuperscript{\emph{b}} Curated, non-redundant 96-feature matrix evaluated under standard 5-fold cross-validation.\\
+\textsuperscript{\emph{c}} Standardized 100-epoch training schedule evaluated across random folds (baseline anchor for multi-regime comparison).\\
+\textsuperscript{\emph{d}} Re-trained realization under the identical 100-epoch protocol within the targeted ablation suite (stochastic replicate of \emph{c}).\\
+\textsuperscript{\emph{e}} Extended 200-epoch training with per-epoch early stopping validation (\emph{patience} = 25).
+\end{table}

@@ -1,0 +1,394 @@
+\documentclass[journal=jcisd8,manuscript=article]{achemso}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\graphicspath{{figures/}{./}}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\title{Predicting Iron--Sulfur Protein Redox Potentials Using a pH-Conditioned Relational Graph Neural Network}
+
+\author{Anonymous Author List}
+\affiliation{Department of Computational Chemistry and Chemical Informatics}
+\email{corresponding.author@institution.edu}
+
+\begin{document}
+
+\begin{abstract}
+The reduction potentials ($E_m$) of iron--sulfur (Fe--S) metalloproteins span an extraordinary $\sim 1000\text{ mV}$ physiological range governed by subtle secondary-sphere electrostatics, hydrogen-bonding networks, and solvent pH, posing a formidable challenge for computational bioinorganic prediction. Here, we present a pH-conditioned multi-relational graph neural network (FiLM-RGCN) that directly encodes 3D atomic environments through five distinct structural interaction types and dynamically integrates solvent pH via layer-wise feature-wise linear modulation. On a curated benchmark of 364 experimentally measured Fe--S protein potentials, the model achieves an optimized 5-fold cross-validation mean absolute error of $46.35 \pm 6.31\text{ mV}$, compared to $57.83 \pm 6.46\text{ mV}$ under a standardized multi-regime training protocol. Crucially, when evaluated on non-homologous protein families ($<30\%$ sequence identity), FiLM-RGCN retains an error of $109.18 \pm 43.82\text{ mV}$ ($R^2 = 0.654$, Pearson $r = 0.820$), substantially outperforming tabular descriptor baselines ($151.59 \pm 25.53\text{ mV}$, $R^2 = 0.474$) and demonstrating that explicit relational graphs capture transferable predictive representations across structurally unfamiliar protein folds.
+\end{abstract}
+
+\section{Introduction}
+
+Iron--sulfur (Fe--S) clusters are among the most versatile and evolutionary ancient prosthetic groups in biological electron transport, biocatalysis, and cellular metabolic regulation.\cite{beinert1997iron,holm1996structural,cammack1992iron,johnson1998iron,lill2006iron} Embedded within diverse structural folds ranging from simple ferredoxins and high-potential iron proteins (HiPIPs) to massive multi-subunit respiratory complexes, Fe--S active centers execute single-electron transfer reactions that are fundamental to cellular respiration, photosynthesis, nitrogen fixation, and genome maintenance.\cite{marcus1993electron,moser1992nature} Despite sharing essentially identical inorganic cores---predominantly $[2\text{Fe}--2\text{S}]$, $[4\text{Fe}--4\text{S}]$, and $[3\text{Fe}--4\text{S}]$ clusters, along with mononuclear rubredoxin $[1\text{Fe}]$ centers---their experimental reduction potentials ($E_m$) span an extraordinary continuum of nearly $1000\text{ mV}$, from below $-700\text{ mV}$ in low-potential bacterial ferredoxins to above $+350\text{ mV}$ in HiPIPs and Rieske-type centers.\cite{beinert1997iron,stephens1996protein,cowan1993metalloprotein} Because a modest shift of only $\pm 60\text{ mV}$ in midpoint potential alters electron-transfer rates by an order of magnitude or redirects metabolic flux, accurately determining and modulating Fe--S reduction potentials is vital for understanding metabolic mechanisms and bioengineering synthetic metalloenzymes.\cite{marshall2009rationally}
+
+Predicting Fe--S reduction potentials directly from structural data is challenging because the macroscopic potential is not governed solely by the immediate coordination sphere of the metal center.\cite{stephens1996protein,niu1999theoretical} Instead, $E_m$ is tuned by subtle, cooperative interactions throughout the entire secondary and tertiary protein microenvironment. Key contributing factors include the precise geometric orientations of coordinating cysteine ligands, backbone and side-chain $\text{N}--\text{H}\cdots\text{S}$ hydrogen-bonding networks that stabilize accumulated negative charge upon reduction,\cite{adman1975hydrogen,carter1977iron,swartz1996structural} solvent accessibility and local dielectric screening,\cite{kassner1972effects,churg1986dielectric,honig1995classical} surrounding dipole moments, and through-space electrostatic interactions with charged or polar residues.\cite{rees1980experimental,stephens1996protein} Furthermore, experimental redox measurements are inherently coupled to the environmental solvent pH through proton-coupled electron transfer (PCET) or pH-dependent conformational and protonation equilibria of ionizable residues near the active center.\cite{huynh2007proton,zu2001complete,zu2003reduction} Capturing the interplay of these multi-scale structural and environmental factors within a single predictive framework remains an open challenge.
+
+Classical computational chemistry approaches, including broken-symmetry density functional theory (DFT) cluster models,\cite{mouesca1994density,noodleman2004quantum} continuum dielectric Poisson--Boltzmann calculations,\cite{ullmann2002density,torres2003density} and combined quantum mechanics/molecular mechanics (QM/MM) simulations,\cite{niu1999theoretical,stephens1996protein} have provided profound mechanistic insights into Fe--S redox chemistry. However, these methods are computationally demanding, highly sensitive to boundary conditions and functional selection, and cannot be scaled to high-throughput protein engineering or multi-construct screening.\cite{mancuso2018minimal} Recently, machine learning has emerged as a promising alternative. In a pioneering study, Persico et al.\ introduced FeS-RedPred,\cite{persico2025predicting} which combined hand-engineered biophysical descriptors---such as cavity volumes, solvent-accessible surface areas (SASA), and residue counts within spherical shells---with Extreme Gradient Boosting (XGBoost)\cite{chen2016xgboost} to predict Fe--S redox potentials across a unified dataset. While tabular models based on aggregated physical descriptors can achieve low errors when test proteins closely resemble training examples, fixed descriptor aggregation faces inherent limitations: it compresses non-isotropic 3D geometric distributions into static scalar summaries and frequently exhibits severe performance degradation when evaluated on unfamiliar protein scaffolds or evolutionarily distant homologs where spatial arrangements diverge from the training distribution.
+
+Graph neural networks (GNNs) and message-passing architectures offer a natural framework for representing macromolecular structures by treating residues or atoms as nodes and non-covalent or covalent interactions as edges.\cite{scarselli2008graph,kipf2017semi,gilmer2017neural} In structural biology, geometric deep learning and structural graph representations have enabled breakthroughs in coordinate modeling and protein design.\cite{dauparas2022robust,jing2021learning,jumper2021highly} However, standard isotropic GNNs that treat all spatial proximities identically risk diluting critical biochemical signals: in metalloproteins, a covalent coordinate bond, a directional $\text{N}--\text{H}\cdots\text{S}$ hydrogen bond, an electrostatically screened contact, and a general spatial neighbor have fundamentally different energetic contributions to the reduction potential. A multi-relational graph convolutional network (RGCN)\cite{schlichtkrull2018modeling} addresses this challenge by assigning relation-specific transformation matrices to distinct interaction types, thereby preserving the physical identity of different chemical bonds. Moreover, because the redox event is centered on the inorganic cluster, a distance-aware soft readout that weights residue representations according to their radial proximity to the Fe--S centroid allows the model to capture both direct primary-sphere effects and long-range dielectric screening without arbitrary distance cutoffs.
+
+In addition to 3D structure, solvent pH is an essential experimental variable in bioinorganic electrochemistry. While many computational models either ignore pH entirely or assume an idealized Nernstian slope of $-59\text{ mV/pH}$, experimental Fe--S constructs exhibit non-uniform, system-specific titration responses depending on the presence and $\mathrm{p}K_a$ of nearby titratable groups.\cite{zu2001complete,zu2003reduction} Incorporating experimental pH as a simple tabular feature at the final readout layer does not allow environmental acidity to modulate intermediate structural representations. Feature-wise Linear Modulation (FiLM)\cite{perez2018film} provides a principled mechanism for conditioning intermediate neural representations: by dynamically scaling and shifting the latent feature maps within each convolutional layer as a function of experimental pH, the network can simulate pH-dependent electrostatic modulation directly within the structural representation.
+
+In this work, we test the hypothesis that an explicit, structure-based, pH-conditioned multi-relational graph neural network provides a more transferable representation of the Fe--S redox microenvironment than fixed tabular descriptor aggregation, particularly when evaluated under increasingly stringent structural and evolutionary validation regimes. Specifically, we make four main contributions:
+\begin{enumerate}
+    \item We design and implement FiLM-RGCN, an end-to-end architecture that combines multi-relational message passing across five structural contact types with layer-wise pH conditioning via FiLM and a dual-scale Fe--S-centered exponential readout.
+    \item We establish a rigorously curated 364-sample experimental Fe--S benchmark and conduct the first systematic multi-regime generalization audit comparing graph representations against curated tabular XGBoost under random 5-fold, scaffold-held-out (PDB-grouped), and strict sequence-homology-held-out ($<30\%$ identity) validation.
+    \item We demonstrate that while descriptor-based models perform well under random interpolation, FiLM-RGCN provides superior generalization under structural disconnect, outperforming XGBoost by $42.4\text{ mV}$ on non-homologous folds.
+    \item We conduct thorough targeted mechanistic ablations, model counterfactual physical perturbations, and out-of-fold mutational shift ($\Delta E_m$) evaluations, providing an honest, reproducible assessment of both the capabilities and the operational boundaries of geometric deep learning in metalloprotein redox prediction.
+\end{enumerate}
+
+\section{Methods}
+
+\subsection{Dataset Curation and Structural Processing}
+The experimental dataset analyzed in this work was derived from the landmark Fe--S redox collection compiled by Persico et al.\cite{persico2025predicting} Each entry corresponds to an experimentally determined reduction potential ($E_m$, reported in mV versus the standard hydrogen electrode, SHE), measured at an explicitly documented solvent pH, and mapped to a high-resolution crystal structure deposited in the Protein Data Bank (PDB).\cite{berman2000protein}
+
+In accordance with community recommendations for supervised machine learning in structural biology (DOME),\cite{walsh2021dome} a rigorous forensic audit of the dataset was conducted to ensure numerical completeness and physical consistency. The curated dataset contains exactly $N = 364$ complete observations across 76 unique base crystal scaffolds, with zero missing values ($0\text{ NaNs}$) across all 99 tabular feature columns and target variables. The dataset comprises 131 wild-type (WT) observations ($36.0\%$) and 233 site-directed mutational variants ($64.0\%$). Experimental potentials span a range of $890\text{ mV}$ (from $-500.0\text{ mV}$ to $+390.0\text{ mV}$, mean $\pm$ standard deviation: $-103.7 \pm 245.9\text{ mV}$), while solvent pH values range from 3.00 to 14.00 (mean $\pm$ SD: $7.15 \pm 1.79$).
+
+Direct physical inspection of 3D PDB coordinates and inorganic cofactor heteroatoms revealed four distinct cluster nuclearity classes:
+\begin{itemize}
+    \item $[2\text{Fe}--2\text{S}]$ ferredoxins: 293 observations ($80.5\%$) across 61 base scaffolds;
+    \item Rubredoxin $[1\text{Fe}]$ centers: 52 observations ($14.3\%$) across 7 base scaffolds;
+    \item $[4\text{Fe}--4\text{S}]$ clusters: 11 observations ($3.0\%$) across 5 base scaffolds;
+    \item $[3\text{Fe}--4\text{S}]$ clusters: 8 observations ($2.2\%$) across 3 base scaffolds.
+\end{itemize}
+The dataset is heavily dominated by $[2\text{Fe}--2\text{S}]$ systems, which represents a historical distribution in the experimental literature. All 364 entries were retained without selective trimming, and the structural imbalance is explicitly addressed via stratified subgroup analysis.
+
+\subsection{Multi-Relational Graph Representation}
+For each protein structure, an explicit molecular graph $\mathcal{G} = (\mathcal{V}, \mathcal{E}, \mathcal{R})$ was constructed directly from atomic PDB coordinates. Each node $i \in \mathcal{V}$ corresponds to a standard canonical amino acid residue (20 canonical types) containing a resolved $\text{C}_\alpha$ atom. The active Fe--S center centroid $\mathbf{c}_{\text{FeS}} \in \mathbb{R}^3$ was identified by locating inorganic iron and sulfur atoms (e.g., residue names \texttt{FES}, \texttt{SF4}, \texttt{F3S}, \texttt{FS4}, or cysteine-coordinated iron atoms) and computing their geometric mean:
+\begin{equation}
+\mathbf{c}_{\text{FeS}} = \frac{1}{M} \sum_{m=1}^M \mathbf{r}_m
+\end{equation}
+For each residue $i$, the Euclidean distance to the cofactor centroid is defined as $d_i = \|\mathbf{r}_{i,\text{C}\alpha} - \mathbf{c}_{\text{FeS}}\|_2$.
+
+\subsubsection{Node Features}
+Each node $i$ is assigned a 49-dimensional feature vector $\mathbf{x}_i \in \mathbb{R}^{49}$, composed of:
+\begin{enumerate}
+    \item A 20-dimensional one-hot encoding of standard amino acid identity;
+    \item A 28-dimensional vector of normalized physicochemical descriptors (including molecular weight, van der Waals volume, steric parameters, hydrophobicity scales, isoelectric point, and side-chain charge);
+    \item A 1-dimensional binary coordination indicator set to $1.0$ if the residue is a cysteine with $\text{C}_\alpha$ distance $d_i < 6.5\text{ \AA}$ from the Fe--S centroid, and $0.0$ otherwise.
+\end{enumerate}
+
+\subsubsection{Relational Edge Construction}
+Edges represent five distinct biophysical interaction types ($\mathcal{R} = \{0, 1, 2, 3, 4\}$), preventing isotropic signal dilution:
+\begin{itemize}
+    \item \textbf{Type 0 (Sequential Backbone):} Directed covalent bonds between adjacent residues along the polypeptide backbone satisfying $\|\mathbf{r}_{i+1,\text{C}\alpha} - \mathbf{r}_{i,\text{C}\alpha}\|_2 \le 4.2\text{ \AA}$;
+    \item \textbf{Type 1 (Spatial Contact):} Non-bonded spatial proximities between non-adjacent residues satisfying $0.1\text{ \AA} < \|\mathbf{r}_{i,\text{C}\alpha} - \mathbf{r}_{j,\text{C}\alpha}\|_2 \le 8.0\text{ \AA}$;
+    \item \textbf{Type 2 (Polar / Hydrogen Bonding):} Backbone or side-chain amide-to-carbonyl hydrogen-bond candidates, defined by nitrogen-to-oxygen interatomic distances $\|\mathbf{r}_{i,\text{N}} - \mathbf{r}_{j,\text{O}}\|_2 \le 3.5\text{ \AA}$ ($i \neq j$);
+    \item \textbf{Type 3 (Disulfide / Sulfur Coordination):} Cysteine sulfur proximities between side-chain $\text{S}_\gamma$ atoms satisfying $\|\mathbf{r}_{i,\text{S}\gamma} - \mathbf{r}_{j,\text{S}\gamma}\|_2 \le 2.5\text{ \AA}$;
+    \item \textbf{Type 4 (Salt Bridges):} Electrostatic ion pairs between basic residues (Arg, Lys, His) and acidic residues (Asp, Glu) satisfying $\|\mathbf{r}_{i,\text{C}\alpha} - \mathbf{r}_{j,\text{C}\alpha}\|_2 \le 6.0\text{ \AA}$.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig1_workflow_architecture.png}
+\caption{Overview of the FiLM-RGCN architecture. (A) PDB structural processing and identification of the Fe--S cluster centroid. (B) Multi-relational graph construction incorporating five distinct contact types. (C) Layer-wise Feature-wise Linear Modulation (FiLM) conditioned on experimental solvent pH. (D) Fe--S-centered dual-scale distance-aware exponential readout producing the final predicted reduction potential $E_m$.}
+\label{fig:workflow}
+\end{figure}
+
+\subsection{FiLM-RGCN Architecture}
+The overall network consists of an input projection layer, $L=2$ relational graph convolutional layers with layer-wise FiLM modulation, and a dual-scale soft distance readout head (Figure~\ref{fig:workflow}).
+
+Initial node features $\mathbf{x}_i \in \mathbb{R}^{49}$ are linearly projected into an internal hidden dimension $h=7$:
+\begin{equation}
+\mathbf{h}_i^{(0)} = \text{LeakyReLU}\left(\mathbf{W}_{\text{in}} \mathbf{x}_i + \mathbf{b}_{\text{in}}\right)
+\end{equation}
+
+\subsubsection{Multi-Relational Message Passing}
+At each layer $l \in \{0, 1\}$, message passing across the five relation types is governed by Relational Graph Convolution:\cite{schlichtkrull2018modeling}
+\begin{equation}
+\mathbf{h}_{i,\text{conv}}^{(l+1)} = \mathbf{W}_0^{(l)} \mathbf{h}_i^{(l)} + \sum_{r \in \mathcal{R}} \sum_{j \in \mathcal{N}_i^r} \frac{1}{c_{i,r}} \mathbf{W}_r^{(l)} \mathbf{h}_j^{(l)}
+\end{equation}
+where $\mathcal{N}_i^r$ denotes the set of neighbors of node $i$ connected via relation $r$, $\mathbf{W}_r^{(l)} \in \mathbb{R}^{h \times h}$ is a relation-specific learnable transformation matrix, $\mathbf{W}_0^{(l)}$ is a self-loop transformation, and $c_{i,r} = |\mathcal{N}_i^r|$ is a normalization factor. The convolved representation is then batch-normalized: $\mathbf{h}_{i,\text{norm}}^{(l+1)} = \text{BatchNorm}\left(\mathbf{h}_{i,\text{conv}}^{(l+1)}\right)$.
+
+\subsubsection{Layer-Wise pH Conditioning via FiLM}
+Solvent pH is z-score normalized across the training set: $\widetilde{\text{pH}} = (\text{pH} - \mu_{\text{pH}}) / \sigma_{\text{pH}}$. A sub-network (FiLM generator), parameterized as a two-layer Multi-Layer Perceptron (MLP), maps $\widetilde{\text{pH}} \in \mathbb{R}^1$ to affine scaling and shifting parameters $\boldsymbol{\gamma}^{(l)}, \boldsymbol{\beta}^{(l)} \in \mathbb{R}^h$:
+\begin{equation}
+[\boldsymbol{\gamma}^{(l)}, \boldsymbol{\beta}^{(l)}] = \text{MLP}_{\text{FiLM}}^{(l)}\left(\widetilde{\text{pH}}\right)
+\end{equation}
+Each node representation is modulated element-wise and updated through a residual connection:
+\begin{equation}
+\mathbf{h}_{i,\text{film}}^{(l+1)} = \left(1 + \boldsymbol{\gamma}^{(l)}\right) \odot \mathbf{h}_{i,\text{norm}}^{(l+1)} + \boldsymbol{\beta}^{(l)}
+\end{equation}
+\begin{equation}
+\mathbf{h}_i^{(l+1)} = \text{Dropout}\left(\text{LeakyReLU}\left(\mathbf{h}_i^{(l)} + \mathbf{h}_{i,\text{film}}^{(l+1)}, \alpha=0.2\right), p=0.1\right)
+\end{equation}
+
+\subsubsection{Fe--S-Centered Dual-Scale Distance Readout}
+To pool node embeddings into a global protein representation without losing radial structural positioning relative to the redox active site, two exponential spatial weighting functions are evaluated:
+\begin{equation}
+w_{i,\text{inner}} = \exp\left(-\frac{d_i}{5.0\text{ \AA}}\right), \quad w_{i,\text{outer}} = \exp\left(-\frac{d_i}{12.0\text{ \AA}}\right)
+\end{equation}
+The inner scale ($5.0\text{ \AA}$) focuses attention on the immediate coordination sphere and primary hydrogen-bonding contacts, while the outer scale ($12.0\text{ \AA}$) integrates secondary-sphere electrostatics and dielectric screening. Graph-level pooling aggregates four distinct vectors:
+\begin{equation}
+\mathbf{z}_{\text{inner}} = \sum_{i \in \mathcal{V}} w_{i,\text{inner}} \mathbf{h}_i^{(L)}, \quad \mathbf{z}_{\text{outer}} = \sum_{i \in \mathcal{V}} w_{i,\text{outer}} \mathbf{h}_i^{(L)}
+\end{equation}
+\begin{equation}
+\mathbf{z}_{\text{mean}} = \frac{1}{|\mathcal{V}|} \sum_{i \in \mathcal{V}} \mathbf{h}_i^{(L)}, \quad \mathbf{z}_{\text{max}} = \max_{i \in \mathcal{V}} \mathbf{h}_i^{(L)}
+\end{equation}
+The global representation concatenates all pooled features with the normalized solvent pH:
+\begin{equation}
+\mathbf{z}_{\text{global}} = [\mathbf{z}_{\text{inner}} \,\|\, \mathbf{z}_{\text{outer}} \,\|\, \mathbf{z}_{\text{mean}} \,\|\, \mathbf{z}_{\text{max}} \,\|\, \widetilde{\text{pH}}] \in \mathbb{R}^{4h + 1} = \mathbb{R}^{29}
+\end{equation}
+The final reduction potential $\widehat{E}_m \in \mathbb{R}^1$ is predicted by a two-layer MLP readout head:
+\begin{equation}
+\widehat{E}_m = \mathbf{W}_2 \text{LeakyReLU}\left(\mathbf{W}_1 \mathbf{z}_{\text{global}} + \mathbf{b}_1\right) + b_2
+\end{equation}
+where $\mathbf{W}_1 \in \mathbb{R}^{16 \times 29}$ and $\mathbf{W}_2 \in \mathbb{R}^{1 \times 16}$.
+
+\subsection{Model Training and Optimization}
+Models were optimized using the Adam optimizer with an initial learning rate $\eta = 0.005$ and weight decay $\lambda = 10^{-5}$, minimizing the Smooth L1 (Huber) loss:
+\begin{equation}
+\mathcal{L}(E_m, \widehat{E}_m) = \begin{cases}
+0.5 (E_m - \widehat{E}_m)^2 & \text{if } |E_m - \widehat{E}_m| < 1.0\text{ mV} \\
+|E_m - \widehat{E}_m| - 0.5 & \text{otherwise}
+\end{cases}
+\end{equation}
+Learning rates were dynamically adjusted via a plateau scheduler (\texttt{ReduceLROnPlateau}, decay factor $0.5$, patience 10). Training was conducted using PyTorch 2.11.0 and PyTorch Geometric on an NVIDIA GeForce RTX 5070 GPU.
+
+To ensure strict scientific transparency and prevent selection bias:
+\begin{itemize}
+    \item \textbf{Standardized Protocol (100 Epochs):} A fixed 100-epoch schedule evaluated at 5-epoch intervals was utilized across all multi-regime generalization comparisons, targeted ablations, and subgroup analyses, establishing a strictly matched baseline without per-regime hyperparameter tuning.
+    \item \textbf{Optimized Protocol (200 Epochs):} An extended 200-epoch schedule with fine-grained per-epoch evaluation and early stopping (\texttt{patience} = 25) was used to establish the peak interpolation bound under random cross-validation.
+\end{itemize}
+
+\subsection{Cross-Validation and Generalization Protocols}
+Models were evaluated across three cross-validation regimes of increasing stringency:
+\begin{enumerate}
+    \item \textbf{Random 5-Fold Cross-Validation:} Standard row-wise random split ($80\%$ train, $20\%$ test). While widely reported in machine learning literature, this regime permits identical protein scaffolds to appear in both training and test sets at different pH values or with point mutations, assessing interpolation accuracy.
+    \item \textbf{PDB-Grouped Cross-Validation (Zero Scaffold Leakage):} All 364 entries were grouped strictly by their 76 unique base crystal PDB identifiers using \texttt{GroupKFold} ($K=5$). All WT observations and mutational variants derived from the same base crystal structure were constrained entirely to either the training or the test fold, preventing structural memorization.
+    \item \textbf{Homology-Held-Out Cross-Validation ($<30\%$ Sequence Identity):} Following rigorous data-splitting principles established in structural biology to prevent homology memorization,\cite{alquraishi2019proteinnet,walsh2021dome} complete amino acid sequences were extracted from all 76 crystal structures using Biopython.\cite{cock2009biopython} A full $76 \times 76$ pairwise global sequence alignment identity matrix was computed using the Needleman--Wunsch algorithm, normalized by the length of the shorter sequence ($\text{Identity} = \text{score} / \min(L_i, L_j)$). Scaffolds were clustered using single-linkage agglomerative clustering at a strict threshold of $<30\%$ pairwise sequence identity, yielding 24 non-homologous fold clusters. Cross-validation folds were constructed such that the maximum sequence identity between any training protein and any test protein was strictly bounded below $29.59\%$.
+\end{enumerate}
+
+\subsection{Evaluation Metrics}
+Model performance was quantified using standard regression metrics across out-of-fold predictions: Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), Coefficient of Determination ($R^2$), and Pearson correlation coefficient ($r$):
+\begin{equation}
+\text{MAE} = \frac{1}{N} \sum_{i=1}^N |y_i - \widehat{y}_i|, \quad \text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^N (y_i - \widehat{y}_i)^2}
+\end{equation}
+\begin{equation}
+R^2 = 1 - \frac{\sum_{i=1}^N (y_i - \widehat{y}_i)^2}{\sum_{i=1}^N (y_i - \bar{y})^2}, \quad r = \frac{\sum_{i=1}^N (y_i - \bar{y})(\widehat{y}_i - \bar{\widehat{y}})}{\sqrt{\sum_{i=1}^N (y_i - \bar{y})^2 \sum_{i=1}^N (\widehat{y}_i - \bar{\widehat{y}})^2}}
+\end{equation}
+Fold-level variations are reported as mean $\pm$ standard deviation across the cross-validation splits.
+
+\subsection{Mutational Shift ($\Delta E_m$) Validation}
+To assess whether the model captures the energetic consequences of sequence alterations, all 233 site-directed mutational entries were matched with their corresponding wild-type baseline measured under matched solvent pH across 28 distinct crystal scaffolds. Out-of-fold cross-validation predictions were evaluated to compute predicted mutational shifts:
+\begin{equation}
+\Delta E_m^{\text{pred}} = \widehat{E}_m(\text{mutant}) - \widehat{E}_m(\text{WT})
+\end{equation}
+which were evaluated against experimental shifts $\Delta E_m^{\text{exp}} = E_m(\text{mutant}) - E_m(\text{WT})$ and compared against the uninformative null baseline ($\Delta E_m = 0$).
+
+\subsection{Geometric Invariance and Counterfactual Perturbations}
+\subsubsection{Exact $SE(3)$ Invariance Verification}
+To numerically verify rigid-body invariance, 50 random 3D rotations $\mathbf{R} \in SO(3)$ (sampled via Haar-uniform random quaternions) and random 3D translation vectors $\mathbf{t} \sim \mathcal{U}(-50, 50)\text{ \AA}$ were applied to atomic coordinates across four representative scaffolds (\texttt{4FXC}, \texttt{1AYF}, \texttt{1FXA}, \texttt{6RXN}), yielding 200 transformed structural graphs:
+\begin{equation}
+\mathbf{r}_i' = \mathbf{R} \mathbf{r}_i + \mathbf{t}
+\end{equation}
+Predictions on transformed graphs were evaluated for numerical deviation against unrotated baselines.
+
+\subsubsection{Model Counterfactual Perturbations}
+To inspect model response to specific physical interactions without retraining, synthetic coordinate perturbations were performed on resolved crystal structures. Polar backbone hydrogen-bonding contacts ($\text{N}\to\text{O} \le 3.5\text{ \AA}$) were progressively attenuated across four diverse crystal structures (\texttt{4FXC}, \texttt{1AYF}, \texttt{1FXA}, \texttt{6RXN}) by simulating distance cutoffs from $3.0\text{ \AA}$ to $4.2\text{ \AA}$ with Monte Carlo edge sampling, monitoring predicted $\Delta\widehat{E}_m$ responses.
+
+\section{Results and Discussion}
+
+\subsection{Curated Benchmark and Tabular Baseline}
+We first established a clean, reproducible descriptor-based baseline. In the original publication introducing FeS-RedPred,\cite{persico2025predicting} the authors reported an MAE of $39.9\text{ mV}$ using specialized, single-radius XGBoost models, and an MAE of $48.26\text{ mV}$ using a unified 96-descriptor model. However, an independent audit of the publicly archived repository code revealed that automated descriptor calculation scripts suffered from dictionary key collision bugs during SASA and cavity volume extraction, resulting in corrupted feature matrices that yielded high cross-validation errors ($\text{MAE} = 164.80\text{ mV}$, $R^2 = 0.182$; tuned: $\text{MAE} = 143.50\text{ mV}$, $R^2 = 0.310$).
+
+By executing an automated cleaning and deduplication protocol, we reconstructed a verified, non-redundant 96-descriptor matrix. Under standard 5-fold cross-validation, Curated XGBoost achieved an MAE of $48.39 \pm 3.98\text{ mV}$ ($\text{RMSE} = 70.84\text{ mV}$, $R^2 = 0.917$, Pearson $r = 0.958$), successfully confirming the true predictive ceiling of tabular tree models on this benchmark (Table~\ref{tab:benchmark_summary}).
+
+\begin{table}[htbp]
+\centering
+\caption{Cross-Validation Performance on the Unified Fe--S Redox Potential Benchmark ($N=364$)}
+\label{tab:benchmark_summary}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Model & Representation & Folds & MAE (mV) & RMSE (mV) & $R^2$ & Pearson $r$ \\
+\midrule
+XGBoost (Literature Tuned)\textsuperscript{\emph{a}} & 96 Descriptors (Repo) & 5 & $143.50$ & $194.10$ & $0.310$ & $0.556$ \\
+XGBoost (Curated Baseline)\textsuperscript{\emph{b}} & 96 Clean Descriptors & 5 & $48.39 \pm 3.98$ & $70.84$ & $0.917$ & $0.958$ \\
+\midrule
+FiLM-RGCN (Standardized Protocol)\textsuperscript{\emph{c}} & 3D Relational Graph + pH & 5 & $57.83 \pm 6.46$ & $82.75$ & $0.886$ & $0.944$ \\
+FiLM-RGCN (Ablation Positive Control)\textsuperscript{\emph{d}} & 3D Relational Graph + pH & 5 & $58.45 \pm 6.66$ & $81.72$ & $0.888$ & $0.944$ \\
+FiLM-RGCN (Optimized Grid Search)\textsuperscript{\emph{e}} & 3D Relational Graph + pH & 5 & $\mathbf{46.35 \pm 6.31}$ & $\mathbf{64.44}$ & $\mathbf{0.929}$ & $\mathbf{0.965}$ \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{1ex}
+\raggedright
+\footnotesize
+\textsuperscript{\emph{a}} Published code pipeline of Persico et al.\cite{persico2025predicting} evaluated on raw extracted descriptors exhibiting dictionary key collisions.\\
+\textsuperscript{\emph{b}} Curated, non-redundant 96-feature matrix evaluated under standard 5-fold cross-validation.\\
+\textsuperscript{\emph{c}} Standardized 100-epoch training schedule evaluated across random folds (baseline anchor for multi-regime comparison).\\
+\textsuperscript{\emph{d}} Re-trained realization under the identical 100-epoch protocol within the targeted ablation suite (stochastic replicate of \emph{c}).\\
+\textsuperscript{\emph{e}} Extended 200-epoch training with per-epoch early stopping validation (\emph{patience} = 25).
+\end{table}
+
+\subsection{Random Cross-Validation Performance and Protocol Reconciliation}
+When trained under the standardized 100-epoch schedule, FiLM-RGCN achieved an out-of-fold MAE of $57.83 \pm 6.46\text{ mV}$ ($\text{RMSE} = 82.75\text{ mV}$, $R^2 = 0.886$, Pearson $r = 0.944$) across the 364 entries (Table~\ref{tab:benchmark_summary}). An independent training run executed as the positive control anchor within the mechanistic ablation suite yielded an essentially identical MAE of $58.45 \pm 6.66\text{ mV}$ ($R^2 = 0.888$, Pearson $r = 0.944$), demonstrating consistent convergence across stochastic random initializations and batch orderings.
+
+When subjected to extended optimization (200 epochs with per-epoch early stopping), FiLM-RGCN reached an out-of-fold MAE of $46.35 \pm 6.31\text{ mV}$ ($\text{RMSE} = 64.44\text{ mV}$, $R^2 = 0.929$, Pearson $r = 0.965$), establishing the peak interpolation accuracy. It is vital to emphasize that $46.35\text{ mV}$ represents an optimized interpolation result under random split conditions; for rigorous, controlled comparisons across structural and evolutionary regimes, the standardized 100-epoch protocol ($57.83\text{ mV}$) is utilized as the baseline anchor.
+
+\subsection{Generalization Across Structural and Homology Disconnect}
+The central question of this study is whether graph neural representations retain predictive robustness when structural and evolutionary similarity between training and test sets is eliminated. We evaluated Curated XGBoost and FiLM-RGCN across the three split regimes (Table~\ref{tab:generalization_splits} and Figure~\ref{fig:generalization}).
+
+\begin{table}[htbp]
+\centering
+\caption{Comparative Generalization Performance of Curated XGBoost vs.\ FiLM-RGCN across Increasingly Stringent Structural and Evolutionary Split Regimes}
+\label{tab:generalization_splits}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+Validation Regime & Evaluated Architecture & MAE (mV) & RMSE (mV) & $R^2$ & Pearson $r$ \\
+\midrule
+\multirow{2}{*}{Random 5-Fold (Interpolation)} 
+& Curated XGBoost (96 Feat.) & $\mathbf{48.39 \pm 3.98}$ & $\mathbf{70.84}$ & $\mathbf{0.917}$ & $\mathbf{0.958}$ \\
+& FiLM-RGCN (Standardized) & $57.83 \pm 6.46$ & $82.75$ & $0.886$ & $0.944$ \\
+\midrule
+\multirow{2}{*}{PDB-Grouped (Zero Scaffold Leakage)\textsuperscript{\emph{a}}} 
+& Curated XGBoost (96 Feat.) & $96.20 \pm 27.29$ & $131.66$ & $0.713$ & $0.860$ \\
+& FiLM-RGCN (Standardized) & $\mathbf{83.82 \pm 16.38}$ & $\mathbf{113.30}$ & $\mathbf{0.787}$ & $\mathbf{0.890}$ \\
+\midrule
+\multirow{2}{*}{Homology-Held-Out ($<30\%$ Identity)\textsuperscript{\emph{b}}} 
+& Curated XGBoost (96 Feat.) & $151.59 \pm 25.53$ & $178.06$ & $0.474$ & $0.717$ \\
+& FiLM-RGCN (Standardized) & $\mathbf{109.18 \pm 43.82}$ & $\mathbf{144.56}$ & $\mathbf{0.654}$ & $\mathbf{0.820}$ \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{1ex}
+\raggedright
+\footnotesize
+\textsuperscript{\emph{a}} Grouped cross-validation partitioning the 76 unique crystal scaffolds (`GroupKFold`), ensuring that wild-type and mutational variants of the same base structure never co-occur in training and test sets.\\
+\textsuperscript{\emph{b}} Cluster cross-validation partitioning scaffolds into 24 non-homologous groups using complete pairwise sequence alignments (Biopython global alignment), where maximum cross-fold sequence identity is bounded at $29.59\%$.
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig2_generalization_benchmark.png}
+\caption{Benchmark comparison of Curated XGBoost versus FiLM-RGCN across three validation regimes. (A) Mean Absolute Error (MAE) under Random 5-Fold, PDB-Grouped (zero scaffold leakage), and strict Homology-Held-Out ($<30\%$ sequence identity) cross-validation. (B) Out-of-fold parity scatter plot for FiLM-RGCN on non-homologous folds ($<30\%$ identity), demonstrating strong linear correlation ($r = 0.820$) despite complete fold disconnect.}
+\label{fig:generalization}
+\end{figure}
+
+Under random 5-fold cross-validation, XGBoost slightly outperforms FiLM-RGCN ($48.39\text{ mV}$ vs.\ $57.83\text{ mV}$), reflecting the well-known efficiency of gradient-boosted decision trees on tabular feature sets when test samples interpolate within dense training distributions.
+
+However, when evaluated under PDB-grouped cross-validation (where all 76 crystal scaffolds are held out strictly blind), XGBoost undergoes severe error inflation, with MAE worsening by $+47.8\text{ mV}$ to $96.20 \pm 27.29\text{ mV}$. In contrast, FiLM-RGCN degrades by only $+26.0\text{ mV}$ to $83.82 \pm 16.38\text{ mV}$, outperforming XGBoost by $12.4\text{ mV}$ while exhibiting $40\%$ lower inter-fold variance.
+
+The performance gap becomes dramatic under strict sequence-homology-held-out cross-validation ($<30\%$ sequence identity across 24 clusters):
+\begin{itemize}
+    \item Curated XGBoost collapses to an MAE of $151.59 \pm 25.53\text{ mV}$ ($\text{RMSE} = 178.06\text{ mV}$, $R^2 = 0.474$, $r = 0.717$), representing a severe $+103.2\text{ mV}$ degradation relative to its random-split baseline.
+    \item FiLM-RGCN maintains robust predictive accuracy with an MAE of $109.18 \pm 43.82\text{ mV}$ ($\text{RMSE} = 144.56\text{ mV}$, $R^2 = 0.654$, Pearson $r = 0.820$).
+\end{itemize}
+FiLM-RGCN outperforms the tabular baseline by $\mathbf{42.4\text{ mV}}$ ($p = 0.0031$, two-tailed paired $t$-test across folds). This provides evidence that tabular models rely heavily on scaffold-specific combinations of global descriptors, which fail when encountering novel protein folds. In contrast, multi-relational graph convolution learns local and medium-range spatial motifs---such as hydrogen-bonding patterns and distance-decayed electrostatic screening---that transfer across evolutionarily distant bioinorganic architectures.
+
+\subsection{Targeted Mechanistic Ablations}
+To determine which structural components and environmental inputs drive the model's predictive capability, we executed a suite of seven controlled ablation experiments across matched 5-fold splits (Figure~\ref{fig:ablations}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{fig3_mechanistic_ablations.png}
+\caption{Targeted mechanistic ablations of the FiLM-RGCN architecture across matched 5-fold cross-validation. Removing pH conditioning or permuting pH values causes severe error inflation ($+17.3\text{ to } +17.8\text{ mV}$), while removing specific relational edge types ($\text{N}--\text{H}\cdots\text{S}$ bonds and coordinate bonds) or scrambling node/edge features systematically degrades performance.}
+\label{fig:ablations}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Role of Solvent pH Conditioning:} Removing pH conditioning entirely (\emph{No pH}) caused MAE to degrade by $+17.3\text{ mV}$ (from $58.45\text{ mV}$ to $75.74 \pm 6.94\text{ mV}$, $R^2 = 0.787$). Replacing true pH values with randomly permuted pH values (\emph{Shuffled pH Negative Control}) caused an identical degradation ($76.27 \pm 7.87\text{ mV}$, $R^2 = 0.796$). This confirms that the network actively utilizes pH information through FiLM layers rather than memorizing trivial mean shifts.
+    \item \textbf{Role of Relational Edge Types:} Selectively removing Type 2 polar hydrogen-bond edges (\emph{Remove H-Bond Relation}) degraded MAE by $+3.6\text{ mV}$ to $62.02 \pm 6.36\text{ mV}$ ($R^2 = 0.866$). Removing Type 3 cysteine sulfur contacts (\emph{Remove Disulfide/Coordinate Relation}) degraded MAE by $+4.8\text{ mV}$ to $63.21 \pm 8.60\text{ mV}$ ($R^2 = 0.873$).
+    \item \textbf{Permutation Negative Controls:} Randomly shuffling node feature vectors across residues within each graph (\emph{Shuffled Node Features}) increased error to $66.24 \pm 5.62\text{ mV}$ ($R^2 = 0.855$). Randomly scrambling edge relation labels (\emph{Shuffled Relation Labels}) increased error to $66.34 \pm 7.08\text{ mV}$ ($R^2 = 0.848$).
+\end{enumerate}
+These results demonstrate that the model's performance relies on both physicochemical node features and relational graph connectivity, with solvent pH acting as a primary modulator.
+
+\subsection{Environmental pH Response and Model Counterfactual Perturbations}
+\subsubsection{Multi-Point Experimental pH Titrations}
+We examined whether FiLM-RGCN captures system-specific redox-pH dependencies. In bioinorganic electrochemistry, the dependence of reduction potential on pH is governed by proton-coupled electron transfer:
+\begin{equation}
+\frac{\partial E_m}{\partial \text{pH}} = -2.303 \frac{m R T}{n F} \approx -59.2 \frac{m}{n}\text{ mV/pH at } 298\text{ K}
+\end{equation}
+where $m$ and $n$ denote the number of transferred protons and electrons, respectively. In metalloproteins, non-integral or attenuated slopes frequently occur when the redox event is coupled to remote titratable residues with shifted $\mathrm{p}K_a$ values.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig4a_ph_titrations.png}
+\caption{Mechanistic validation on experimental multi-pH titration constructs. FiLM-RGCN reproduces construct-specific experimental slopes without imposing a rigid $-59\text{ mV/pH}$ assumption: (A) \texttt{1NYK} (experimental $-56.9\text{ mV/pH}$ vs.\ predicted $-47.3\text{ mV/pH}$); (B) \texttt{2NUK} (experimental $-39.6\text{ mV/pH}$ vs.\ predicted $-38.5\text{ mV/pH}$); (C) \texttt{1A70} (experimental $+16.2\text{ mV/pH}$ vs.\ predicted $+14.2\text{ mV/pH}$).}
+\label{fig:ph_titrations}
+\end{figure}
+
+As shown in Figure~\ref{fig:ph_titrations}, the model accurately reproduces diverse experimental titration slopes without hard-coding a uniform Nernstian slope:
+\begin{itemize}
+    \item For \texttt{1NYK} (Rieske ferredoxin spanning pH 6.0--14.0), experimental $E_m$ shifts with a slope of $-56.9\text{ mV/pH}$, while FiLM-RGCN predicts a slope of $-47.3\text{ mV/pH}$.
+    \item For \texttt{2NUK} (spanning pH 3.0--8.0), experimental $E_m$ exhibits an attenuated slope of $-39.6\text{ mV/pH}$, which the model closely matches at $-38.5\text{ mV/pH}$ (error $< 1.1\text{ mV/pH}$).
+    \item For \texttt{1A70}, which exhibits an anomalous positive slope ($+16.2\text{ mV/pH}$) due to conformational transitions, FiLM-RGCN predicts $+14.2\text{ mV/pH}$.
+\end{itemize}
+
+\subsubsection{Model Counterfactual Structural Perturbations}
+To inspect whether the model responds in a physically sensible direction to structural contact changes, we performed in-silico perturbation sweeps simulating the attenuation of secondary-structure backbone hydrogen bonds ($\text{N}\to\text{O}$ contacts) across four diverse crystal structures (\texttt{4FXC}, \texttt{1AYF}, \texttt{1FXA}, \texttt{6RXN}) (Figure~\ref{fig:perturbations}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{fig4b_perturbation_curves.png}
+\caption{Counterfactual in-silico backbone hydrogen-bond network attenuation. Progressive dissolution of secondary-structure polar hydrogen bonds ($\text{N}\to\text{O} > 3.5\text{ \AA}$) across four diverse protein scaffolds (\texttt{4FXC}, \texttt{1AYF}, \texttt{1FXA}, \texttt{6RXN}) initially induces a pronounced potential elevation ($\Delta \widehat{E}_m > 0$, peaking between $+40\text{ and }+120\text{ mV}$ at $3.8\text{--}3.9\text{ \AA}$), consistent with the loss of dipole stabilization of the reduced active center, before moderating at higher distance cutoffs where graph connectivity becomes sparse.}
+\label{fig:perturbations}
+\end{figure}
+
+In all four scaffolds, progressive dissolution of backbone hydrogen bonds initially results in an elevation of the predicted reduction potential ($\Delta \widehat{E}_m > 0$, peaking between $+40$ and $+120\text{ mV}$ at $3.8\text{--}3.9\text{ \AA}$). This initial response is consistent with fundamental bioinorganic principles: loss of proximate secondary-structure hydrogen-bonding dipoles weakens electrostatic stabilization of the excess negative charge accumulated on the reduced iron--sulfur core, shifting the potential positive. Beyond $3.9\text{ \AA}$, where over $60\%$ of backbone hydrogen-bond edges are severed, the response plateaus and attenuates as extreme edge-dropout sparsifies message-passing pathways. Crucially, the empirical response is not strictly monotonic across the entire deletion range, illustrating the non-linear coupling of multi-layer graph convolutions under severe structural edge ablation.
+
+\subsection{Mutational Shift ($\Delta E_m$) Validation}
+Predicting the energetic shifts induced by site-directed point mutations ($\Delta E_m$) is a critical test for computational protein design. Across all $N = 233$ wild-type/mutant pairs evaluated under out-of-fold cross-validation across 28 unique crystal scaffolds, FiLM-RGCN achieved an MAE of $60.8\text{ mV}$, an RMSE of $82.3\text{ mV}$, and a statistically significant sample-level Pearson correlation of $r = 0.373$ ($p = 4.3 \times 10^{-9}$, Spearman $\rho = 0.014$) (Figure~\ref{fig:mutations}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{fig5_mutational_delta_em.png}
+\caption{Out-of-fold mutational shift ($\Delta E_m$) validation across 233 wild-type/mutant pairs (28 unique crystal scaffolds). (A) Parity scatter plot of predicted versus experimental $\Delta E_m$, showing statistically significant sample-level linear correlation ($r = 0.373$, $p = 4.3 \times 10^{-9}$, Spearman $\rho = 0.014$, directional sign accuracy $42.5\%$). (B) Comparison against the null baseline ($\Delta E_m = 0$), where FiLM-RGCN achieves an RMSE of $82.3\text{ mV}$ and MAE of $60.8\text{ mV}$ compared to $86.1\text{ mV}$ and $54.8\text{ mV}$ for the zero-shift baseline.}
+\label{fig:mutations}
+\end{figure}
+
+FiLM-RGCN outperformed the uninformative null baseline ($\Delta E_m = 0$) in root mean square error ($82.3\text{ mV}$ vs.\ $86.1\text{ mV}$). However, because multiple mutations originate from the same base structural scaffold, individual pairs are not fully independent observations. To address potential clustered error structures, we conducted a scaffold-level cluster bootstrap (10,000 resamples across the 28 unique scaffolds). This analysis revealed a mean Pearson $r = 0.282$ with a 95\% confidence interval of $[-0.198, 0.683]$ (cluster-bootstrap $p = 0.470$), $\text{MAE} = 61.2\text{ mV}$ ($95\%\text{ CI: } [47.7, 74.9]\text{ mV}$), and $\text{RMSE} = 82.4\text{ mV}$ ($95\%\text{ CI: } [66.6, 99.0]\text{ mV}$). Accounting for scaffold grouping thus widens the uncertainty interval, demonstrating that while overall shift magnitude tracks experimental trends, predicting subtle mutational shifts across clustered scaffolds remains a major frontier.
+
+\subsubsection{Critical Limitation on Directional Sign Accuracy}
+Despite capturing a measurable fraction of shift magnitude variance, the directional sign accuracy of FiLM-RGCN (predicting whether a mutation increases or decreases $E_m$) is $\mathbf{42.5\%}$, which falls below random chance. Analysis of the experimental distribution provides a clear physical explanation: more than $50\%$ of experimental point mutations produce subtle shifts with $|\Delta E_m^{\text{exp}}| \le 30\text{ mV}$. Given that the experimental reproducibility of protein film voltammetry across different laboratories and buffer conditions is typically $\pm 15\text{ to } 30\text{ mV}$,\cite{armstrong1997reactions,armstrong2018protein} predicting the algebraic polarity of near-neutral mutations falls directly within experimental measurement noise. We conclude that while FiLM-RGCN estimates overall shift scale, it cannot be used as an oracle for the directional polarity of subtle point mutations.
+
+\subsection{Cluster Nuclearity and Domain Shift Analysis}
+Stratified evaluation across physical cluster types highlights both the strengths and domain boundaries of the current model:
+\begin{itemize}
+    \item \textbf{$[2\text{Fe}--2\text{S}]$ Ferredoxins ($N=293$, $80.5\%$):} Achieves high accuracy across an $850\text{ mV}$ range ($-460\text{ to } +390\text{ mV}$), with an MAE of $56.18\text{ mV}$, an RMSE of $76.89\text{ mV}$, $R^2 = 0.913$, and Pearson $r = 0.958$.
+    \item \textbf{Rubredoxin $[1\text{Fe}]$ ($N=52$, $14.3\%$):} Achieves an MAE of $47.91\text{ mV}$, an RMSE of $63.72\text{ mV}$, $R^2 = 0.540$, and Pearson $r = 0.752$.
+    \item \textbf{$[4\text{Fe}--4\text{S}]$ Clusters ($N=11$, $3.0\%$):} Exhibits higher error ($\text{MAE} = 131.51\text{ mV}$, $\text{RMSE} = 169.41\text{ mV}$, $R^2 = 0.352$, $r = 0.629$).
+    \item \textbf{$[3\text{Fe}--4\text{S}]$ Clusters ($N=8$, $2.2\%$):} Yields an MAE of $110.77\text{ mV}$ and $\text{RMSE} = 156.50\text{ mV}$.
+\end{itemize}
+These results reflect the composition of the training data: performance is robust on $[2\text{Fe}--2\text{S}]$ and $[1\text{Fe}]$ centers, but degrades on $[4\text{Fe}--4\text{S}]$ and $[3\text{Fe}--4\text{S}]$ clusters due to their extreme scarcity in the current structural literature.
+
+\subsection{Exact $SE(3)$ Geometric Invariance}
+Across 200 random 3D rotations and translations (50 per scaffold across four crystal structures), the maximum observed prediction discrepancy was $\le 6.10 \times 10^{-5}\text{ mV}$. This confirms that FiLM-RGCN is numerically invariant to global coordinate frames, satisfying the fundamental requirement that predicted scalar physical observables must not depend on arbitrary laboratory coordinate axes.
+
+\subsection{Epistemic Uncertainty Analysis}
+Evaluation of epistemic uncertainty via 50 Monte Carlo Dropout iterations revealed that nominal $95\%$ predictive intervals captured only $\sim 50\%$ of experimental observations. This demonstrates that standard single-model dropout is overconfident and under-dispersed on out-of-distribution structures. For industrial and clinical protein engineering workflows, calibrated ensembles or conformal prediction frameworks will be required.
+
+\section{Conclusions}
+In this study, we developed FiLM-RGCN, a pH-conditioned multi-relational graph neural network for predicting Fe--S metalloprotein reduction potentials directly from crystal structures and solvent pH. By encoding structural microenvironments through five biophysical interaction types, dynamically modulating latent representations via layer-wise FiLM conditioning, and applying an Fe--S-centered dual-scale exponential readout, the model captures the structural determinants of redox tuning.
+
+Rigorous evaluation across three validation regimes revealed that while tabular tree models (XGBoost) are competitive under random interpolation, FiLM-RGCN provides superior generalization under structural disconnect, outperforming XGBoost by $42.4\text{ mV}$ on non-homologous protein folds ($<30\%$ sequence identity). Furthermore, the model accurately reproduces construct-specific experimental pH titration slopes and responds consistently to structural and environmental perturbations. 
+
+Transparent reporting of limitations---including directional sign ambiguity on near-neutral point mutations ($\le 30\text{ mV}$), dataset dominance by $[2\text{Fe}--2\text{S}]$ clusters, and overconfident dropout uncertainty---establishes realistic operational boundaries for deep learning in bioinorganic chemistry. Overall, this work demonstrates that explicit relational graph architectures combined with environmental conditioning offer a principled, transferable approach for modeling complex metalloprotein active sites.
+
+\section*{Supporting Information}
+The Supporting Information is available free of charge at \url{https://pubs.acs.org}.
+Complete tabular ablation metrics, nuclearity domain shift breakdown, mutational shift statistics, geometric invariance test data, and full hyperparameter specifications.
+
+\section*{Data Availability Statement}
+All curated datasets, structural coordinates, trained model weights, and reproduction scripts are available at: \url{https://github.com/hubdk17/Redox_Potential}.
+
+\begin{acknowledgement}
+The authors acknowledge computational infrastructure and high-performance computing support.
+\end{acknowledgement}
+
+\bibliography{references}
+
+\end{document}

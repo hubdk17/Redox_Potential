@@ -1,0 +1,26 @@
+[
+  {
+    "scaffold": "4fxc",
+    "base_pred_mV": -322.2874450683594,
+    "max_deviation_mV": 6.103515625e-05,
+    "strictly_invariant": false
+  },
+  {
+    "scaffold": "1ayf",
+    "base_pred_mV": -252.2653350830078,
+    "max_deviation_mV": 1.52587890625e-05,
+    "strictly_invariant": false
+  },
+  {
+    "scaffold": "1fxa",
+    "base_pred_mV": -331.8563537597656,
+    "max_deviation_mV": 3.0517578125e-05,
+    "strictly_invariant": false
+  },
+  {
+    "scaffold": "6rxn",
+    "base_pred_mV": -125.48783111572266,
+    "max_deviation_mV": 2.288818359375e-05,
+    "strictly_invariant": false
+  }
+]

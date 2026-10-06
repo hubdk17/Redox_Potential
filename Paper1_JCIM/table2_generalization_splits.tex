@@ -1,0 +1,29 @@
+\begin{table}[htbp]
+\centering
+\caption{Comparative Generalization Performance of Curated XGBoost vs.\ FiLM-RGCN across Increasingly Stringent Structural and Evolutionary Split Regimes}
+\label{tab:generalization_splits}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+Validation Regime & Evaluated Architecture & MAE (mV) & RMSE (mV) & $R^2$ & Pearson $r$ \\
+\midrule
+\multirow{2}{*}{Random 5-Fold (Interpolation)} 
+& Curated XGBoost (96 Feat.) & $\mathbf{48.39 \pm 3.98}$ & $\mathbf{70.84}$ & $\mathbf{0.917}$ & $\mathbf{0.958}$ \\
+& FiLM-RGCN (Standardized) & $57.83 \pm 6.46$ & $82.75$ & $0.886$ & $0.944$ \\
+\midrule
+\multirow{2}{*}{PDB-Grouped (Zero Scaffold Leakage)\textsuperscript{\emph{a}}} 
+& Curated XGBoost (96 Feat.) & $96.20 \pm 27.29$ & $131.66$ & $0.713$ & $0.860$ \\
+& FiLM-RGCN (Standardized) & $\mathbf{83.82 \pm 16.38}$ & $\mathbf{113.30}$ & $\mathbf{0.787}$ & $\mathbf{0.890}$ \\
+\midrule
+\multirow{2}{*}{Homology-Held-Out ($<30\%$ Identity)\textsuperscript{\emph{b}}} 
+& Curated XGBoost (96 Feat.) & $151.59 \pm 25.53$ & $178.06$ & $0.474$ & $0.717$ \\
+& FiLM-RGCN (Standardized) & $\mathbf{109.18 \pm 43.82}$ & $\mathbf{144.56}$ & $\mathbf{0.654}$ & $\mathbf{0.820}$ \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{1ex}
+\raggedright
+\footnotesize
+\textsuperscript{\emph{a}} Grouped cross-validation partitioning the 76 unique crystal scaffolds (`GroupKFold`), ensuring that wild-type and mutational variants of the same base structure never co-occur in training and test sets.\\
+\textsuperscript{\emph{b}} Cluster cross-validation partitioning scaffolds into 24 non-homologous groups using complete pairwise sequence alignments (Biopython global alignment), where maximum cross-fold sequence identity is bounded at $29.59\%$.
+\end{table}

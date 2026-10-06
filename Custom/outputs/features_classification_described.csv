@@ -1,0 +1,97 @@
+Feature_Name,Source,XGBoost_Importance_mV,Description
+shell8_wavg_Flexibility,derived,108.8481,Weighted average of backbone flexibility for residues located within 8 Angstroms of the cofactor.
+pH,already provided,24.5275,Experimental pH condition under which the redox potential was measured.
+chain_frac_CYS,derived,11.0317,Overall fractional composition of amino acid CYS across the entire protein chain.
+chain_frac_TRP,derived,7.8888,Overall fractional composition of amino acid TRP across the entire protein chain.
+chain_frac_PRO,derived,6.3851,Overall fractional composition of amino acid PRO across the entire protein chain.
+n_cys_coordinating,derived,5.0155,Number of Cysteine residues directly coordinating the Fe atoms of the cofactor.
+chain_frac_ASN,derived,4.6176,Overall fractional composition of amino acid ASN across the entire protein chain.
+avg_dist_to_cofactor,derived,3.6543,Average distance from all chain residues to the cofactor geometric center.
+shell8_frac_HIS,derived,3.3086,Fractional composition of amino acid HIS restricted to residues within 8 Angstroms of the cofactor.
+shell8_wavg_Phelix,derived,3.0609,Weighted average of alpha-helix forming propensity for residues located within 8 Angstroms of the cofactor.
+chain_frac_ALA,derived,2.517,Overall fractional composition of amino acid ALA across the entire protein chain.
+nearest_charged_neg_dist,derived,1.7795,Distance from the cofactor center to the nearest negatively charged residue (ASP or GLU).
+chain_frac_nonpolar,derived,1.6503,Overall fraction of nonpolar residues in the protein chain.
+chain_frac_GLN,derived,1.4594,Overall fractional composition of amino acid GLN across the entire protein chain.
+chain_frac_THR,derived,1.3636,Overall fractional composition of amino acid THR across the entire protein chain.
+n_hbond_acceptors_5A,derived,1.1947,"Number of hydrogen bond acceptor atoms (O, N) within 5 Angstroms of the cofactor."
+chain_frac_GLU,derived,1.1815,Overall fractional composition of amino acid GLU across the entire protein chain.
+fe_fe_distance,derived,1.1199,Exact Euclidean distance between the two iron (Fe) atoms in the Fe2S2 core.
+chain_frac_aromatic,derived,0.9034,"Overall fraction of aromatic residues (PHE, TRP, TYR, HIS) in the protein chain."
+chain_frac_LYS,derived,0.826,Overall fractional composition of amino acid LYS across the entire protein chain.
+cofactor_depth,derived,0.7845,"Depth of the cofactor, defined as the distance from the cluster center to the closest protein surface atom."
+chain_frac_charged,derived,0.7696,Overall fraction of formally charged residues in the protein chain.
+fe_s_dist_2,derived,0.7012,Euclidean distance between iron and sulfur atom index 2 in the Fe2S2 cluster.
+chain_frac_GLY,derived,0.6606,Overall fractional composition of amino acid GLY across the entire protein chain.
+shell8_wavg_nH-bonds,derived,0.6568,Weighted average of potential hydrogen bonds for residues located within 8 Angstroms of the cofactor.
+avg_bfactor,already provided,0.648,"Temperature factor (B-factor) avg of the protein atoms, representing thermal motion and flexibility."
+chain_frac_HIS,derived,0.6075,Overall fractional composition of amino acid HIS across the entire protein chain.
+shell8_frac_GLY,derived,0.5621,Fractional composition of amino acid GLY restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_ALA,derived,0.535,Fractional composition of amino acid ALA restricted to residues within 8 Angstroms of the cofactor.
+shell8_wavg_Steric_hindrance,derived,0.5064,Weighted average of steric hindrance of the side chain for residues located within 8 Angstroms of the cofactor.
+chain_frac_SER,derived,0.4798,Overall fractional composition of amino acid SER across the entire protein chain.
+chain_frac_TYR,derived,0.4547,Overall fractional composition of amino acid TYR across the entire protein chain.
+chain_frac_VAL,derived,0.4478,Overall fractional composition of amino acid VAL across the entire protein chain.
+chain_wavg_Hydrophobicity,derived,0.3811,Overall weighted average of hydrophobicity (solvent affinity) across the entire protein chain.
+nearest_charged_pos_dist,derived,0.3759,"Distance from the cofactor center to the nearest positively charged residue (ARG, LYS, or HIS)."
+fe_s_dist_3,derived,0.3671,Euclidean distance between iron and sulfur atom index 3 in the Fe2S2 cluster.
+chain_wavg_Psheet,derived,0.3566,Overall weighted average of beta-sheet forming propensity across the entire protein chain.
+shell8_frac_CYS,derived,0.3446,Fractional composition of amino acid CYS restricted to residues within 8 Angstroms of the cofactor.
+n_residues_12A,derived,0.3284,Total number of standard amino acid residues located within 12A of the cofactor.
+chain_wavg_Isoelectric_point,derived,0.2977,Overall weighted average of isoelectric point (pI) across the entire protein chain.
+chain_frac_ARG,derived,0.2918,Overall fractional composition of amino acid ARG across the entire protein chain.
+max_bfactor,already provided,0.2907,"Temperature factor (B-factor) max of the protein atoms, representing thermal motion and flexibility."
+n_residues_5A,derived,0.2873,Total number of standard amino acid residues located within 5A of the cofactor.
+s_s_distance,derived,0.2807,Euclidean distance between the inorganic sulfur atoms in the Fe2S2 cluster.
+cluster_planarity,derived,0.2729,Planarity RMSD (root-mean-square deviation of the cofactor atoms from their best-fit plane).
+shell8_wavg_Isoelectric_point,derived,0.2667,Weighted average of isoelectric point (pI) for residues located within 8 Angstroms of the cofactor.
+fe_s_dist_0,derived,0.258,Euclidean distance between iron and sulfur atom index 0 in the Fe2S2 cluster.
+shell8_wavg_Hydrophobicity,derived,0.2566,Weighted average of hydrophobicity (solvent affinity) for residues located within 8 Angstroms of the cofactor.
+chain_wavg_Phelix,derived,0.2542,Overall weighted average of alpha-helix forming propensity across the entire protein chain.
+std_bfactor,already provided,0.2499,"Temperature factor (B-factor) std of the protein atoms, representing thermal motion and flexibility."
+chain_frac_MET,derived,0.2466,Overall fractional composition of amino acid MET across the entire protein chain.
+chain_wavg_Volume,derived,0.2428,Overall weighted average of residue volume/bulkiness across the entire protein chain.
+net_charge_12A,derived,0.2399,Sum of formal charges of all standard amino acid residues located within 12A of the cofactor.
+chain_frac_LEU,derived,0.2331,Overall fractional composition of amino acid LEU across the entire protein chain.
+chain_frac_ASP,derived,0.2264,Overall fractional composition of amino acid ASP across the entire protein chain.
+chain_frac_PHE,derived,0.2259,Overall fractional composition of amino acid PHE across the entire protein chain.
+min_bfactor,already provided,0.2196,"Temperature factor (B-factor) min of the protein atoms, representing thermal motion and flexibility."
+chain_wavg_Steric_hindrance,derived,0.2138,Overall weighted average of steric hindrance of the side chain across the entire protein chain.
+chain_wavg_Flexibility,derived,0.2086,Overall weighted average of backbone flexibility across the entire protein chain.
+shell8_wavg_Psheet,derived,0.2026,Weighted average of beta-sheet forming propensity for residues located within 8 Angstroms of the cofactor.
+shell8_frac_PRO,derived,0.1774,Fractional composition of amino acid PRO restricted to residues within 8 Angstroms of the cofactor.
+chain_frac_ILE,derived,0.1764,Overall fractional composition of amino acid ILE across the entire protein chain.
+shell8_frac_LEU,derived,0.1665,Fractional composition of amino acid LEU restricted to residues within 8 Angstroms of the cofactor.
+chain_wavg_nH-bonds,derived,0.1598,Overall weighted average of potential hydrogen bonds across the entire protein chain.
+shell8_frac_PHE,derived,0.1557,Fractional composition of amino acid PHE restricted to residues within 8 Angstroms of the cofactor.
+molecular_weight,derived,0.1432,Total calculated molecular weight of the protein chain in Daltons.
+n_hbond_donors_5A,derived,0.143,"Number of hydrogen bond donor atoms (N, O, S) within 5 Angstroms of the cofactor."
+cofactor_exposure,derived,0.1356,Fractional surface area of the cofactor exposed to solvent.
+fe_s_dist_1,derived,0.1292,Euclidean distance between iron and sulfur atom index 1 in the Fe2S2 cluster.
+resolution,already provided,0.1279,X-ray crystallography resolution of the PDB structure in Angstroms.
+shell8_wavg_Volume,derived,0.1256,Weighted average of residue volume/bulkiness for residues located within 8 Angstroms of the cofactor.
+chain_length_ratio,derived,0.1185,Ratio of the chain length to the overall sequence length.
+shell8_frac_THR,derived,0.1099,Fractional composition of amino acid THR restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_TRP,derived,0.1071,Fractional composition of amino acid TRP restricted to residues within 8 Angstroms of the cofactor.
+n_cofactor_chains,derived,0.1001,Number of polypeptide chains in contact with or containing the Fe2S2 cofactor.
+shell8_frac_SER,derived,0.0969,Fractional composition of amino acid SER restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_MET,derived,0.0939,Fractional composition of amino acid MET restricted to residues within 8 Angstroms of the cofactor.
+n_residues_8A,derived,0.0905,Total number of standard amino acid residues located within 8A of the cofactor.
+shell8_frac_ASN,derived,0.0811,Fractional composition of amino acid ASN restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_VAL,derived,0.0779,Fractional composition of amino acid VAL restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_GLN,derived,0.0716,Fractional composition of amino acid GLN restricted to residues within 8 Angstroms of the cofactor.
+cluster_volume,derived,0.0561,Convex hull volume of the Fe2S2 cofactor cluster atoms in cubic Angstroms.
+shell8_frac_ILE,derived,0.0501,Fractional composition of amino acid ILE restricted to residues within 8 Angstroms of the cofactor.
+n_chains,already provided,0.048,Total number of polypeptide chains in the PDB structure.
+shell8_frac_LYS,derived,0.0435,Fractional composition of amino acid LYS restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_GLU,derived,0.0343,Fractional composition of amino acid GLU restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_TYR,derived,0.033,Fractional composition of amino acid TYR restricted to residues within 8 Angstroms of the cofactor.
+shell8_frac_ARG,derived,0.0299,Fractional composition of amino acid ARG restricted to residues within 8 Angstroms of the cofactor.
+net_charge_5A,derived,0.0284,Sum of formal charges of all standard amino acid residues located within 5A of the cofactor.
+net_charge_8A,derived,0.0257,Sum of formal charges of all standard amino acid residues located within 8A of the cofactor.
+n_residues,already provided,0.0219,Total number of amino acid residues in the entire protein chain.
+shell8_frac_ASP,derived,0.0089,Fractional composition of amino acid ASP restricted to residues within 8 Angstroms of the cofactor.
+chain_wavg_LogSolubility_m_at_20°C,derived,0.0,Overall weighted average of log solubility in water at 20°C across the entire protein chain.
+chain_frac_polar,derived,0.0,Overall fraction of polar residues in the protein chain.
+n_cofactors,derived,0.0,Total number of Fe2S2 (or related) cofactor clusters in the structure.
+shell8_wavg_LogSolubility_m_at_20°C,derived,0.0,Weighted average of log solubility in water at 20°C for residues located within 8 Angstroms of the cofactor.

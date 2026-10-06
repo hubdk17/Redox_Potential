@@ -1,0 +1,97 @@
+Feature_Name,Source,XGBoost_Importance_mV
+shell8_wavg_Flexibility,derived,108.8481
+pH,already provided,24.5275
+chain_frac_CYS,derived,11.0317
+chain_frac_TRP,derived,7.8888
+chain_frac_PRO,derived,6.3851
+n_cys_coordinating,derived,5.0155
+chain_frac_ASN,derived,4.6176
+avg_dist_to_cofactor,derived,3.6543
+shell8_frac_HIS,derived,3.3086
+shell8_wavg_Phelix,derived,3.0609
+chain_frac_ALA,derived,2.517
+nearest_charged_neg_dist,derived,1.7795
+chain_frac_nonpolar,derived,1.6503
+chain_frac_GLN,derived,1.4594
+chain_frac_THR,derived,1.3636
+n_hbond_acceptors_5A,derived,1.1947
+chain_frac_GLU,derived,1.1815
+fe_fe_distance,derived,1.1199
+chain_frac_aromatic,derived,0.9034
+chain_frac_LYS,derived,0.826
+cofactor_depth,derived,0.7845
+chain_frac_charged,derived,0.7696
+fe_s_dist_2,derived,0.7012
+chain_frac_GLY,derived,0.6606
+shell8_wavg_nH-bonds,derived,0.6568
+avg_bfactor,already provided,0.648
+chain_frac_HIS,derived,0.6075
+shell8_frac_GLY,derived,0.5621
+shell8_frac_ALA,derived,0.535
+shell8_wavg_Steric_hindrance,derived,0.5064
+chain_frac_SER,derived,0.4798
+chain_frac_TYR,derived,0.4547
+chain_frac_VAL,derived,0.4478
+chain_wavg_Hydrophobicity,derived,0.3811
+nearest_charged_pos_dist,derived,0.3759
+fe_s_dist_3,derived,0.3671
+chain_wavg_Psheet,derived,0.3566
+shell8_frac_CYS,derived,0.3446
+n_residues_12A,derived,0.3284
+chain_wavg_Isoelectric_point,derived,0.2977
+chain_frac_ARG,derived,0.2918
+max_bfactor,already provided,0.2907
+n_residues_5A,derived,0.2873
+s_s_distance,derived,0.2807
+cluster_planarity,derived,0.2729
+shell8_wavg_Isoelectric_point,derived,0.2667
+fe_s_dist_0,derived,0.258
+shell8_wavg_Hydrophobicity,derived,0.2566
+chain_wavg_Phelix,derived,0.2542
+std_bfactor,already provided,0.2499
+chain_frac_MET,derived,0.2466
+chain_wavg_Volume,derived,0.2428
+net_charge_12A,derived,0.2399
+chain_frac_LEU,derived,0.2331
+chain_frac_ASP,derived,0.2264
+chain_frac_PHE,derived,0.2259
+min_bfactor,already provided,0.2196
+chain_wavg_Steric_hindrance,derived,0.2138
+chain_wavg_Flexibility,derived,0.2086
+shell8_wavg_Psheet,derived,0.2026
+shell8_frac_PRO,derived,0.1774
+chain_frac_ILE,derived,0.1764
+shell8_frac_LEU,derived,0.1665
+chain_wavg_nH-bonds,derived,0.1598
+shell8_frac_PHE,derived,0.1557
+molecular_weight,derived,0.1432
+n_hbond_donors_5A,derived,0.143
+cofactor_exposure,derived,0.1356
+fe_s_dist_1,derived,0.1292
+resolution,already provided,0.1279
+shell8_wavg_Volume,derived,0.1256
+chain_length_ratio,derived,0.1185
+shell8_frac_THR,derived,0.1099
+shell8_frac_TRP,derived,0.1071
+n_cofactor_chains,derived,0.1001
+shell8_frac_SER,derived,0.0969
+shell8_frac_MET,derived,0.0939
+n_residues_8A,derived,0.0905
+shell8_frac_ASN,derived,0.0811
+shell8_frac_VAL,derived,0.0779
+shell8_frac_GLN,derived,0.0716
+cluster_volume,derived,0.0561
+shell8_frac_ILE,derived,0.0501
+n_chains,already provided,0.048
+shell8_frac_LYS,derived,0.0435
+shell8_frac_GLU,derived,0.0343
+shell8_frac_TYR,derived,0.033
+shell8_frac_ARG,derived,0.0299
+net_charge_5A,derived,0.0284
+net_charge_8A,derived,0.0257
+n_residues,already provided,0.0219
+shell8_frac_ASP,derived,0.0089
+chain_wavg_LogSolubility_m_at_20°C,derived,0.0
+chain_frac_polar,derived,0.0
+n_cofactors,derived,0.0
+shell8_wavg_LogSolubility_m_at_20°C,derived,0.0

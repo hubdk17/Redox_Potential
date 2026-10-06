@@ -1,0 +1,161 @@
+\documentclass[journal=jcisd8,manuscript=suppinfo]{achemso}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\title{Supporting Information: Predicting Iron--Sulfur Protein Redox Potentials Using a pH-Conditioned Relational Graph Neural Network}
+
+\author{Anonymous Author List}
+\affiliation{Department of Computational Chemistry and Chemical Informatics}
+\email{corresponding.author@institution.edu}
+
+\begin{document}
+
+\section{Section S1: Model Hyperparameters and Software Environment}
+
+\subsection{Architectural and Optimization Hyperparameters}
+The complete architectural and training parameters for the standardized and optimized FiLM-RGCN configurations are summarized in Table~\ref{tab:hyperparams}.
+
+\begin{table}[htbp]
+\centering
+\caption{Complete Hyperparameters for Standardized and Optimized FiLM-RGCN Models}
+\label{tab:hyperparams}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcc@{}}
+\toprule
+Parameter Description & Standardized Protocol (Multi-Regime) & Optimized Protocol (Random SOTA) \\
+\midrule
+Input Node Feature Dimension ($d_{\text{in}}$) & 49 & 49 \\
+Hidden Layer Dimension ($h$) & 7 & 7 \\
+Number of RGCN Layers ($L$) & 2 & 2 \\
+Number of Relational Edge Types & 5 & 5 \\
+Spatial Contact Cutoff ($r_{\text{cutoff}}$) & $8.0\text{ \AA}$ & $8.0\text{ \AA}$ \\
+FiLM Generator Architecture & MLP: $1 \to 16 \to 14$ & MLP: $1 \to 16 \to 14$ \\
+FiLM Activation Function & LeakyReLU ($\alpha=0.2$) & LeakyReLU ($\alpha=0.2$) \\
+Dropout Probability ($p$) & 0.10 & 0.10 \\
+Exponential Inner Readout Scale & $5.0\text{ \AA}$ & $5.0\text{ \AA}$ \\
+Exponential Outer Readout Scale & $12.0\text{ \AA}$ & $12.0\text{ \AA}$ \\
+Global Readout Head & MLP: $29 \to 16 \to 1$ & MLP: $29 \to 16 \to 1$ \\
+Optimizer & Adam & Adam \\
+Initial Learning Rate ($\eta$) & $0.005$ & $0.005$ \\
+Weight Decay ($\lambda$) & $1.0 \times 10^{-5}$ & $1.0 \times 10^{-5}$ \\
+Loss Function & Smooth L1 (Huber) & Smooth L1 (Huber) \\
+LR Scheduler & ReduceLROnPlateau (factor 0.5) & ReduceLROnPlateau (factor 0.5) \\
+Scheduler Patience & 10 epochs & 10 epochs \\
+Batch Size & 32 & 32 \\
+Total Training Epochs & 100 & 200 \\
+Validation Checkpoint Frequency & Every 5 epochs & Every 1 epoch \\
+Early Stopping Patience & None (Fixed 100 epochs) & 25 epochs \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Software and Hardware Dependencies}
+All computational experiments were executed under the following verified software environment:
+\begin{itemize}
+    \item Python version: 3.11.10
+    \item PyTorch: 2.11.0+cu128
+    \item PyTorch Geometric (PyG): 2.7.0
+    \item XGBoost: 3.0.2
+    \item Scikit-learn: 1.6.1
+    \item SciPy: 1.15.2
+    \item NumPy: 1.26.4
+    \item Biopython: 1.86
+    \item CUDA Runtime: 12.8
+    \item Hardware: NVIDIA GeForce RTX 5070 Laptop GPU (8GB VRAM), Intel Core i7 processor, 32GB RAM.
+\end{itemize}
+
+\section{Section S2: Complete Tabular Ablation Data}
+
+Table~\ref{tab:s1_ablations} presents the full numerical evaluation of all seven mechanistic ablation variants across matched 5-fold cross-validation.
+
+\begin{table}[htbp]
+\centering
+\caption{Full Numerical Metrics for Targeted Mechanistic Ablations across Matched 5-Fold Cross-Validation}
+\label{tab:s1_ablations}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Model Variant & MAE (mV) & MAE SD (mV) & RMSE (mV) & $R^2$ & Pearson $r$ \\
+\midrule
+1. Full FiLM-RGCN (Champion Positive Control) & $\mathbf{58.45}$ & $\pm 6.66$ & $\mathbf{81.72}$ & $\mathbf{0.888}$ & $\mathbf{0.944}$ \\
+2. No pH (pH Conditioning Removed) & $75.74$ & $\pm 6.94$ & $113.80$ & $0.787$ & $0.888$ \\
+3. Shuffled pH (Negative Permutation Control) & $76.27$ & $\pm 7.87$ & $111.45$ & $0.796$ & $0.893$ \\
+4. Remove Polar H-Bond Edges (Type 2) & $62.02$ & $\pm 6.36$ & $89.70$ & $0.866$ & $0.933$ \\
+5. Remove Disulfide/Coordinate Edges (Type 3) & $63.21$ & $\pm 8.60$ & $87.35$ & $0.873$ & $0.936$ \\
+6. Shuffled Node Features (Negative Control) & $66.24$ & $\pm 5.62$ & $93.40$ & $0.855$ & $0.925$ \\
+7. Shuffled Relation Labels (Negative Control) & $66.34$ & $\pm 7.08$ & $95.62$ & $0.848$ & $0.921$ \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{Section S3: Cluster Nuclearity Subgroup Breakdown}
+
+Table~\ref{tab:s2_nuclearity} details the stratified performance metrics across the four physical Fe--S cluster core geometries.
+
+\begin{table}[htbp]
+\centering
+\caption{Domain Shift and Out-of-Fold Performance Stratified by Fe--S Cluster Nuclearity}
+\label{tab:s2_nuclearity}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Cluster Nuclearity & $N$ Samples & Dataset \% & MAE (mV) & RMSE (mV) & $R^2$ & Pearson $r$ \\
+\midrule
+$[2\text{Fe}--2\text{S}]$ Ferredoxins & 293 & $80.5\%$ & $56.18$ & $76.89$ & $0.913$ & $0.958$ \\
+Rubredoxin $[1\text{Fe}]$ & 52 & $14.3\%$ & $47.91$ & $63.72$ & $0.540$ & $0.752$ \\
+$[4\text{Fe}--4\text{S}]$ Clusters & 11 & $3.0\%$ & $131.51$ & $169.41$ & $0.352$ & $0.629$ \\
+$[3\text{Fe}--4\text{S}]$ Clusters & 8 & $2.2\%$ & $110.77$ & $156.50$ & $-2.180$ & $-0.310$ \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{Section S4: Numerical $SE(3)$ Rigid-Body Invariance Verification}
+
+Table~\ref{tab:s4_invariance} reports the maximum numerical deviation observed across 50 random 3D rotations and translations per crystal structure.
+
+\begin{table}[htbp]
+\centering
+\caption{Numerical Verification of Rigid-Body Rotation and Translation Invariance}
+\label{tab:s4_invariance}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccc@{}}
+\toprule
+Base Scaffold PDB & Unrotated Prediction (mV) & Random Rotations Tested & Max Discrepancy (mV) & Strictly Invariant \\
+\midrule
+\texttt{4FXC} & $-322.2874$ & 50 & $6.10 \times 10^{-5}$ & True \\
+\texttt{1AYF} & $-252.2653$ & 50 & $1.53 \times 10^{-5}$ & True \\
+\texttt{1FXA} & $-331.8564$ & 50 & $3.05 \times 10^{-5}$ & True \\
+\texttt{6RXN} & $-125.4878$ & 50 & $2.29 \times 10^{-5}$ & True \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\section{Section S5: Experimental Multi-pH Constructs and Titration Slopes}
+
+Table~\ref{tab:s5_titrations} documents the experimental and predicted titration slopes across the multi-pH validation series.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of Experimental and Model-Predicted $\Delta E_m / \Delta\text{pH}$ Titration Slopes}
+\label{tab:s5_titrations}
+\small
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccc@{}}
+\toprule
+Construct PDB & pH Range Evaluated & Experimental Slope (mV/pH) & Predicted Slope (mV/pH) & Residual Error (mV/pH) \\
+\midrule
+\texttt{1NYK} & $6.0 - 14.0$ & $-56.90$ & $-47.30$ & $+9.60$ \\
+\texttt{2NUK} & $3.0 - 8.0$ & $-39.60$ & $-38.50$ & $+1.10$ \\
+\texttt{1A70} & $6.0 - 8.5$ & $+16.20$ & $+14.20$ & $-2.00$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\end{document}
